@@ -1,11 +1,12 @@
-# Configuration Nixpacks pour Railway (alternative si Dockerfile ne fonctionne pas)
+# Configuration Nixpacks pour Railway
+# IMPORTANT: Configurez Root Directory = 'backend' dans Railway Settings
 
 [phases.setup]
-nixPkgs = ["nodejs-18_x", "postgresql"]
+nixPkgs = ["nodejs-18_x"]
 
 [phases.install]
 cmds = [
-  "npm ci --only=production",
+  "npm ci",
   "npx prisma generate"
 ]
 

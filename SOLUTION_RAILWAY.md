@@ -1,34 +1,31 @@
 # 🚀 Solution Rapide pour Railway
 
-## Le Problème
+## ⚠️ Le Problème
 
 ```
-ERROR: cd backend: No such file or directory
+/bin/bash: line 1: cd: backend: No such file or directory
 ```
 
 Railway essaie d'exécuter `cd backend` mais le contexte de build ne contient pas ce répertoire.
 
-## ✅ Solution en 3 Étapes (2 minutes)
+## ✅ Solution en 1 Étape (30 secondes) - LA PLUS IMPORTANTE
 
-### Étape 1 : Configurer le Root Directory
+### ⭐ ÉTAPE UNIQUE : Configurer le Root Directory
 
-1. Ouvrez Railway Dashboard
-2. Sélectionnez votre service backend
-3. Allez dans **Settings** → **Source**
-4. Dans **Root Directory**, entrez : `backend`
-5. Cliquez sur **Save**
+**C'EST LA SOLUTION PRINCIPALE - FAITES CECI EN PREMIER !**
 
-### Étape 2 : Vérifier la Configuration
+1. Ouvrez **Railway Dashboard** → votre service backend
+2. Cliquez sur **Settings** (⚙️ icône en haut à droite)
+3. Dans le menu de gauche, cliquez sur **Source**
+4. Dans le champ **Root Directory**, entrez exactement : `backend`
+5. Cliquez sur **Save** (en bas)
 
-Railway devrait maintenant :
-- Détecter automatiquement `backend/package.json`
-- Utiliser `backend/nixpacks.toml` (si présent)
-- Exécuter les commandes depuis `backend/`
+**C'est tout !** Railway utilisera maintenant directement le dossier `backend` comme racine.
 
-### Étape 3 : Redéployer
+### Redéployer
 
 1. Allez dans **Deployments**
-2. Cliquez sur **Redeploy** ou poussez un nouveau commit
+2. Cliquez sur **Redeploy** ou poussez un nouveau commit sur GitHub
 
 ## ✅ C'est tout !
 
