@@ -1,0 +1,18 @@
+# Configuration Nixpacks pour Railway (alternative si Dockerfile ne fonctionne pas)
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "postgresql"]
+
+[phases.install]
+cmds = [
+  "npm ci --only=production",
+  "npx prisma generate"
+]
+
+[phases.build]
+cmds = [
+  "npm run build"
+]
+
+[start]
+cmd = "npm run start:prod"

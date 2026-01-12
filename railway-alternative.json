@@ -1,8 +1,9 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "$comment": "Configuration alternative si Dockerfile ne fonctionne pas",
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "backend/Dockerfile"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install && npx prisma generate && npm run build"
   },
   "deploy": {
     "startCommand": "npm run start:prod",
