@@ -45,12 +45,25 @@ Après le déploiement, vérifiez que :
 3. Vérifiez les logs Railway pour plus de détails
 4. Essayez de supprimer et recréer le service Railway
 
-## Alternative : Dockerfile
+## Alternative : Modifier la Commande de Build
+
+Si vous ne pouvez pas configurer Root Directory, vous pouvez modifier la commande de build :
+
+1. Dans Railway → Settings → Build
+2. **Build Command** : Supprimez `cd backend &&` et gardez seulement :
+   ```
+   npm install && npx prisma generate && npm run build
+   ```
+3. **Start Command** : `npm run start:prod`
+
+**Mais attention** : Cette solution ne fonctionnera que si Root Directory = `backend` est configuré, sinon Railway cherchera `package.json` à la racine.
+
+## Alternative 2 : Dockerfile
 
 Si le Root Directory ne fonctionne pas, vous pouvez utiliser le Dockerfile :
 
 1. Dans Railway → Settings → Build
 2. Builder : **Dockerfile**
-3. Dockerfile Path : `backend/Dockerfile`
+3. Dockerfile Path : `backend/Dockerfile` (ou laissez vide si Root Directory = backend)
 
 Le Dockerfile est déjà créé dans `backend/Dockerfile`.

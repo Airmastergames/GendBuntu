@@ -1,4 +1,5 @@
 # Dockerfile pour Railway - Backend GendBuntu
+# Ce Dockerfile est dans backend/ et Railway doit avoir Root Directory = 'backend'
 
 FROM node:18-alpine AS base
 
@@ -12,7 +13,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Installer toutes les dépendances (y compris devDependencies pour le build)
-RUN npm ci && npm cache clean --force
+RUN npm install && npm cache clean --force
 
 # Générer le client Prisma
 RUN npx prisma generate

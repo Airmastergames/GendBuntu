@@ -1,4 +1,4 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "$comment": "Ce fichier est à la racine. Configurez Root Directory = 'backend' dans Railway Settings"
+  "$comment": "IMPORTANT: Configurez Root Directory = 'backend' dans Railway Settings → Source. Ce fichier à la racine est ignoré si Root Directory est configuré."
 }

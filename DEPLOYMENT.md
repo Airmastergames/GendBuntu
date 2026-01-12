@@ -23,23 +23,21 @@
 
 ### 3. Configurer le service Backend
 
-**IMPORTANT** : Il y a deux méthodes pour configurer Railway :
-
-#### Méthode A : Root Directory (Recommandé)
+**⚠️ IMPORTANT - À FAIRE IMMÉDIATEMENT APRÈS LA CRÉATION DU SERVICE :**
 
 1. Ajouter un nouveau service "GitHub Repo"
 2. Sélectionner votre repository
-3. **Dans Settings → Source → Root Directory** : définir `backend`
-4. Railway utilisera automatiquement le dossier `backend` comme racine
-5. Railway détectera automatiquement NestJS et `nixpacks.toml`
+3. **IMMÉDIATEMENT**, aller dans **Settings** (⚙️) → **Source**
+4. **Root Directory** : définir `backend`
+5. **Save**
 
-#### Méthode B : Dockerfile
+**Pourquoi ?** Sans cette configuration, Railway essaiera d'exécuter `cd backend && npm install...` ce qui échouera avec l'erreur "No such file or directory".
 
-1. Ajouter un nouveau service "GitHub Repo"
-2. Sélectionner votre repository
-3. **Dans Settings → Build → Builder** : sélectionner "Dockerfile"
-4. **Dockerfile Path** : `backend/Dockerfile`
-5. Railway utilisera le Dockerfile pour le build
+**Avec Root Directory = `backend` configuré :**
+- ✅ Railway utilisera automatiquement le dossier `backend` comme racine
+- ✅ Railway détectera automatiquement `backend/package.json`
+- ✅ Railway utilisera `backend/nixpacks.toml` pour le build
+- ✅ Les commandes s'exécuteront depuis `backend/` sans `cd backend`
 
 ### 4. Variables d'environnement
 
