@@ -23,9 +23,21 @@
 
 ### 3. Configurer le service Backend
 
+**⚠️ IMPORTANT - À FAIRE IMMÉDIATEMENT APRÈS LA CRÉATION DU SERVICE :**
+
 1. Ajouter un nouveau service "GitHub Repo"
 2. Sélectionner votre repository
-3. Railway détectera automatiquement NestJS
+3. **IMMÉDIATEMENT**, aller dans **Settings** (⚙️) → **Source**
+4. **Root Directory** : définir `backend`
+5. **Save**
+
+**Pourquoi ?** Sans cette configuration, Railway essaiera d'exécuter `cd backend && npm install...` ce qui échouera avec l'erreur "No such file or directory".
+
+**Avec Root Directory = `backend` configuré :**
+- ✅ Railway utilisera automatiquement le dossier `backend` comme racine
+- ✅ Railway détectera automatiquement `backend/package.json`
+- ✅ Railway utilisera `backend/nixpacks.toml` pour le build
+- ✅ Les commandes s'exécuteront depuis `backend/` sans `cd backend`
 
 ### 4. Variables d'environnement
 
@@ -54,15 +66,27 @@ Railway exécutera automatiquement :
 3. `npm run build`
 4. `npm run start:prod`
 
-### 6. Migrations Prisma
+### 6. Configurer le Root Directory (IMPORTANT)
+
+**Cette étape est cruciale pour éviter l'erreur "cd backend: No such file or directory"**
+
+1. Dans Railway Dashboard, aller dans votre service backend
+2. Cliquer sur **Settings** → **Source**
+3. Dans **Root Directory**, entrer : `backend`
+4. Sauvegarder
+
+Railway utilisera maintenant directement le dossier `backend` comme racine du projet.
+
+### 7. Migrations Prisma
 
 Après le premier déploiement, exécuter les migrations :
 
 ```bash
-# Via Railway CLI
-railway run npx prisma migrate deploy
+# Via Railway CLI (depuis la racine du projet)
+railway run --service your-backend-service npx prisma migrate deploy
 
 # Ou via Railway Dashboard → Deployments → Run Command
+# Commande: npx prisma migrate deploy
 ```
 
 ### 7. Seed de la base de données (optionnel)
