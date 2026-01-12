@@ -1,0 +1,449 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Configuration pour le seed
+// Exécuter: npm run prisma:seed
+
+// ============================================
+// AUTHENTIFICATION & UTILISATEURS
+// ============================================
+
+enum Role {
+  ADMIN
+  CORG
+  OPJ
+  GENDARME
+  OFFICIER
+  COMMANDEMENT
+}
+
+enum Grade {
+  GENDARME_ADJOINT
+  GENDARME
+  MARECHAL_DES_LOGIS
+  MARECHAL_DES_LOGIS_CHEF
+  ADJUDANT
+  ADJUDANT_CHEF
+  MAJOR
+  LIEUTENANT
+  CAPITAINE
+  CHEF_D_ESCADRON
+  LIEUTENANT_COLONEL
+  COLONEL
+  GENERAL
+}
+
+model User {
+  id            String    @id @default(cuid())
+  rio           String    @unique // Numéro RIO unique
+  nom           String
+  prenom        String
+  email         String    @unique
+  password      String    // Hashé avec bcrypt
+  grade         Grade
+  numeroService String    @unique
+  uniteId       String
+  role          Role      @default(GENDARME)
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  unite         Unite     @relation(fields: [uniteId], references: [id])
+  refreshTokens RefreshToken[]
+  sentMessages  Message[] @relation("Sender")
+  receivedMessages Message[] @relation("Receiver")
+  planningServices PlanningService[]
+  pvs          PV[]
+  pves         PVE[]
+  interventions Intervention[] @relation("CreatedBy")
+  interventionsAssigned Intervention[] @relation("AssignedTo")
+  compteRendus CompteRendu[]
+  incidents    Incident[]
+  logs         AuditLog[]
+
+  @@index([email])
+  @@index([rio])
+  @@index([uniteId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+// ============================================
+// UNITES
+// ============================================
+
+model Unite {
+  id          String   @id @default(cuid())
+  code        String   @unique // Code unité (ex: "BRIG-001")
+  nom         String
+  type        String   // Type d'unité (Brigade, Gendarmerie Mobile, etc.)
+  adresse     String?
+  telephone   String?
+  email       String?
+  responsableId String? // User ID du responsable
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  services    PlanningService[]
+  interventions Intervention[]
+  incidents   Incident[]
+
+  @@index([code])
+}
+
+// ============================================
+// PULSAR - PLANNING & SERVICES
+// ============================================
+
+enum StatutService {
+  PLANIFIE
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+model PlanningService {
+  id          String        @id @default(cuid())
+  titre       String
+  description String?
+  dateDebut   DateTime
+  dateFin     DateTime
+  statut      StatutService @default(PLANIFIE)
+  typeService String        // Patrouille, Astreinte, Garde, etc.
+  uniteId     String
+  createdById String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  unite       Unite         @relation(fields: [uniteId], references: [id])
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  participants PlanningParticipant[]
+  pvs         PV[]
+
+  @@index([uniteId])
+  @@index([dateDebut])
+  @@index([statut])
+}
+
+model PlanningParticipant {
+  id          String           @id @default(cuid())
+  serviceId   String
+  userId      String
+  role        String?          // Chef de patrouille, Participant, etc.
+  createdAt   DateTime         @default(now())
+
+  service     PlanningService  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@unique([serviceId, userId])
+  @@index([serviceId])
+  @@index([userId])
+}
+
+// ============================================
+// REGISTRE PV (PULSAR)
+// ============================================
+
+enum TypePV {
+  CONTRAVENTION
+  DELIT
+  CRIME
+  AUTRE
+}
+
+enum StatutPV {
+  BROUILLON
+  EN_ATTENTE_VALIDATION
+  VALIDE
+  ARCHIVE
+}
+
+model PV {
+  id              String    @id @default(cuid())
+  numeroPV        String    @unique // Numéro unique auto-généré
+  type            TypePV
+  statut          StatutPV  @default(BROUILLON)
+  dateInfraction  DateTime
+  lieuInfraction  String
+  description     String    @db.Text
+  serviceId       String?   // Lien avec le service Pulsar
+  createdById     String
+  validatedById   String?
+  validatedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  service         PlanningService? @relation(fields: [serviceId], references: [id])
+  createdBy       User             @relation(fields: [createdById], references: [id])
+  validatedBy     User?            @relation("PVValidator", fields: [validatedById], references: [id])
+  pve             PVE?
+
+  @@index([numeroPV])
+  @@index([createdById])
+  @@index([dateInfraction])
+  @@index([statut])
+}
+
+// ============================================
+// LRPGN - PVE (Procès-Verbal Électronique)
+// ============================================
+
+enum StatutPVE {
+  BROUILLON
+  EN_COURS
+  VALIDE
+  TRANSMIS
+  ARCHIVE
+}
+
+model PVE {
+  id          String     @id @default(cuid())
+  numeroPVE  String     @unique
+  pvId       String?    @unique // Lien avec PV si existe
+  statut     StatutPVE  @default(BROUILLON)
+  contenu    String     @db.Text
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  pv          PV?        @relation(fields: [pvId], references: [id])
+  createdBy   User       @relation(fields: [createdById], references: [id])
+
+  @@index([numeroPVE])
+  @@index([createdById])
+}
+
+// ============================================
+// MESSAGERIE INTERNE
+// ============================================
+
+enum StatutMessage {
+  BROUILLON
+  ENVOYE
+  LU
+  ARCHIVE
+}
+
+model Message {
+  id          String         @id @default(cuid())
+  sujet       String
+  contenu     String         @db.Text
+  senderId    String
+  receiverId  String
+  statut      StatutMessage  @default(BROUILLON)
+  isRead      Boolean        @default(false)
+  readAt      DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  sender      User           @relation("Sender", fields: [senderId], references: [id])
+  receiver    User           @relation("Receiver", fields: [receiverId], references: [id])
+  piecesJointes PieceJointe[]
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([statut])
+  @@index([isRead])
+}
+
+model PieceJointe {
+  id        String   @id @default(cuid())
+  messageId String
+  nomFichier String
+  chemin    String   // Chemin de stockage
+  taille    Int      // Taille en bytes
+  typeMime  String
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// ============================================
+// BDSP - INTERVENTIONS (CORG)
+// ============================================
+
+enum PrioriteIntervention {
+  BASSE
+  NORMALE
+  HAUTE
+  CRITIQUE
+}
+
+enum StatutIntervention {
+  EN_ATTENTE
+  EN_COURS
+  TERMINEE
+  ANNULEE
+}
+
+model Intervention {
+  id              String                @id @default(cuid())
+  numeroIntervention String             @unique
+  titre           String
+  description     String                @db.Text
+  adresse         String
+  priorite        PrioriteIntervention  @default(NORMALE)
+  statut          StatutIntervention    @default(EN_ATTENTE)
+  dateCreation    DateTime              @default(now())
+  dateDebut       DateTime?
+  dateFin         DateTime?
+  createdById     String                // CORG qui crée
+  uniteAssignedId String?               // Unité assignée
+  assignedToId    String?               // Gendarme assigné
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  // Relations
+  createdBy       User                  @relation("CreatedBy", fields: [createdById], references: [id])
+  uniteAssigned   Unite?                @relation(fields: [uniteAssignedId], references: [id])
+  assignedTo      User?                 @relation("AssignedTo", fields: [assignedToId], references: [id])
+  journal         JournalIntervention[]
+  incidents       Incident[]
+
+  @@index([numeroIntervention])
+  @@index([statut])
+  @@index([priorite])
+  @@index([createdById])
+  @@index([uniteAssignedId])
+}
+
+model JournalIntervention {
+  id             String       @id @default(cuid())
+  interventionId String
+  action         String       @db.Text
+  userId         String
+  createdAt      DateTime     @default(now())
+
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+
+  @@index([interventionId])
+  @@index([userId])
+}
+
+// ============================================
+// COMPTE-RENDU OPÉRATIONNEL
+// ============================================
+
+model CompteRendu {
+  id          String   @id @default(cuid())
+  titre       String
+  contenu     String   @db.Text
+  dateOperation DateTime
+  lieu        String
+  createdById String
+  pdfPath     String?  // Chemin du PDF généré
+  discordUrl  String?  // URL du message Discord
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@index([createdById])
+  @@index([dateOperation])
+}
+
+// ============================================
+// EVENTGRAVE - INCIDENTS GRAVES
+// ============================================
+
+enum GraviteIncident {
+  LEGERE
+  MOYENNE
+  GRAVE
+  TRES_GRAVE
+  CRITIQUE
+}
+
+model Incident {
+  id              String           @id @default(cuid())
+  numeroIncident  String           @unique
+  titre           String
+  description     String           @db.Text
+  gravite         GraviteIncident  @default(MOYENNE)
+  dateIncident    DateTime
+  lieu            String
+  uniteId         String
+  createdById     String
+  interventionId  String?         // Lien avec intervention BDSP
+  militairesBlesses String?        @db.Text // Liste des militaires blessés
+  chronologie     String?          @db.Text // Chronologie des événements
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  unite           Unite            @relation(fields: [uniteId], references: [id])
+  createdBy       User             @relation(fields: [createdById], references: [id])
+  intervention    Intervention?    @relation(fields: [interventionId], references: [id])
+
+  @@index([numeroIncident])
+  @@index([gravite])
+  @@index([uniteId])
+  @@index([dateIncident])
+}
+
+// ============================================
+// AUDIT & LOGS
+// ============================================
+
+enum TypeAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+}
+
+model AuditLog {
+  id        String     @id @default(cuid())
+  userId    String?
+  action    TypeAction
+  entity    String     // Nom de l'entité (User, PV, Intervention, etc.)
+  entityId  String?    // ID de l'entité concernée
+  details   String?    @db.Text // Détails JSON
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime   @default(now())
+
+  // Relations
+  user      User?      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}

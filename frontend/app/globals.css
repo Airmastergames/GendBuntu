@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --background: #102a43;
+  --foreground: #f0f4f8;
+  --card: #243b53;
+  --card-foreground: #f0f4f8;
+  --border: #334e68;
+  --input: #486581;
+  --primary: #627d98;
+  --primary-foreground: #f0f4f8;
+  --secondary: #486581;
+  --secondary-foreground: #f0f4f8;
+  --accent: #ff9800;
+  --accent-foreground: #102a43;
+  --destructive: #f44336;
+  --destructive-foreground: #f0f4f8;
+  --muted: #334e68;
+  --muted-foreground: #bcccdc;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Scrollbar personnalisée style militaire */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #243b53;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #486581;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #627d98;
+}
+
+/* Styles utilitaires */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .border-military {
+    border-color: #334e68;
+  }
+
+  .bg-military-card {
+    background-color: #243b53;
+  }
+
+  .bg-military-dark {
+    background-color: #102a43;
+  }
+}
